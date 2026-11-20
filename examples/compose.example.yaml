@@ -1,0 +1,36 @@
+# Example: the dashboard next to AdGuard Home. Adjust paths and values.
+services:
+  dashboard:
+    build: .                      # or ./homelab-dashboard if this repo lives in a subfolder
+    container_name: homelab-dashboard
+    restart: unless-stopped
+    network_mode: host            # real LAN access: ping, ARP table, mDNS
+    pid: host                     # see host processes (PROCS, top)
+    env_file: .env                # ADGUARD_USER / ADGUARD_PASSWORD (optional)
+    environment:
+      - PORT=8090
+      - BRAND=HOME                # header shows BRAND//NAME
+      - NAME=LAB
+      - TZ=Etc/UTC
+      - ADGUARD_URL=http://127.0.0.1:80
+      - OS_RELEASE=/host/os-release
+      - HOST_NAME=homelab
+      # - WEATHER_LAT=40.71       # weather is off unless both are set
+      # - WEATHER_LON=-74.01
+      # - WEATHER_PLACE=NYC
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # read-only
+      - /etc/os-release:/host/os-release:ro
+      - ./data:/app/data                               # names.json + remembered devices
+    labels:
+      - homelab.name=Dashboard
+      - homelab.port=8090
+
+  # Any other container can be customized with labels:
+  # whoami:
+  #   image: traefik/whoami
+  #   ports: ["8081:80"]
+  #   labels:
+  #     - homelab.name=Who Am I
+  #     - homelab.url=http://homelab.local:8081
+  #     - homelab.hide=false

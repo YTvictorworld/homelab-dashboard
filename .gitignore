@@ -1,0 +1,6 @@
+# secrets and local state — never commit
+.env
+data/
+web/status.json
+*.tmp
+__pycache__/

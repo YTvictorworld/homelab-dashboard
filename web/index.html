@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HOME//LAB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=1795161364">
+</head>
+<body>
+  <div class="screen">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header class="box head">
+      <div class="brand">
+        <div class="logo"><span class="tri">▲</span> <span id="brand">HOME</span>//<span id="name">LAB</span></div>
+        <div class="role" id="role">NETOPS - homelab</div>
+      </div>
+      <div class="hostinfo">
+        <div><span class="k">HOST</span> <span id="h-host">—</span></div>
+        <div><span class="k">LAN</span> <span id="h-lan">—</span></div>
+        <div><span class="k">OS</span> <span id="h-os">—</span></div>
+      </div>
+      <div class="sep"></div>
+      <div class="loadinfo">
+        <div class="big" id="h-load">— — —</div>
+        <div class="k" id="h-procs">PROCS —</div>
+      </div>
+      <div class="sep"></div>
+      <div class="weather">
+        <div class="temp" id="w-temp">--°</div>
+        <div class="k" id="w-cond">—</div>
+      </div>
+      <div class="clock">
+        <div class="time" id="clock">--:--:--</div>
+        <div class="k" id="date">—</div>
+      </div>
+    </header>
+
+    <!-- ── Services ────────────────────────────────────────── -->
+    <section class="box">
+      <div class="box-title"><span>▌SERVICES</span><span id="svc-up">UP —</span></div>
+      <div class="cards" id="services"></div>
+    </section>
+
+    <!-- ── Network ──────────────────────────────────────────────── -->
+    <section class="box">
+      <div class="box-title"><span>▌NETWORK</span><span id="net-up">ONLINE —</span></div>
+      <div class="cards small" id="devices"></div>
+    </section>
+
+    <!-- ── System + DNS + Log ──────────────────────────────── -->
+    <div class="bottom">
+      <section class="box">
+        <div class="box-title"><span>▌SYSTEM</span><span id="sys-up">UP —</span></div>
+        <div class="sys" id="system"></div>
+        <div class="sys-foot" id="sys-foot"></div>
+      </section>
+      <section class="box">
+        <div class="box-title"><span>▌DNS</span><span id="dns-state">—</span></div>
+        <div class="dns" id="dns"></div>
+      </section>
+      <section class="box">
+        <div class="box-title"><span>▌EVENT LOG</span><span id="stale"></span></div>
+        <ol class="log" id="log"></ol>
+      </section>
+    </div>
+
+  </div>
+  <script src="app.js?v=1795161364"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+/* Homelab terminal dashboard · CRT-style kiosk panel designed for 1920x1080 */
+:root {
+  --bg: #04070b;
+  --box: #060c13;
+  --card: #08111a;
+  --frame: #1d6f86;        /* outer frame */
+  --frame-2: #123a48;      /* inner frame */
+  --cyan: #4fd8ec;
+  --cyan-2: #2aa7bb;
+  --glow: 0 0 6px rgba(79, 216, 236, .55);
+  --text: #cfe9ef;
+  --muted: #5f8794;
+  --dim: #2b4752;
+  --green: #45e08a;
+  --amber: #f2b33d;
+  --red: #ff5a4f;
+  --pix: "Silkscreen", "JetBrains Mono", monospace;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+  overflow: hidden;
+}
+/* very subtle CRT scanlines */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);
+}
+
+.screen {
+  height: 100vh;
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto 300px;
+  gap: 12px;
+}
+.screen > section.box:nth-of-type(1) { display: flex; flex-direction: column; }
+#services { flex: 1; min-height: 0; grid-auto-rows: minmax(0, 1fr); }
+
+/* ── Double-framed boxes ──────────────────────────────── */
+.box {
+  border: 1px solid var(--frame);
+  outline: 1px solid var(--frame-2);
+  outline-offset: -5px;
+  background: var(--box);
+  padding: 12px 14px;
+  min-height: 0;
+  box-shadow: inset 0 0 30px rgba(79, 216, 236, .04);
+  overflow: hidden;
+}
+.box-title {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--pix); font-weight: 700; font-size: 15px;
+  color: var(--cyan); text-shadow: var(--glow);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.box-title span:last-child { font-family: var(--mono); font-weight: 600; font-size: 13px; }
+.k { color: var(--muted); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; }
+
+/* ── Header ───────────────────────────────────────────── */
+.head {
+  display: grid;
+  grid-template-columns: 1fr auto 1px auto 1px auto auto;
+  align-items: center;
+  gap: 26px;
+  padding: 14px 22px;
+}
+.logo {
+  font-family: var(--pix); font-weight: 700; font-size: 34px;
+  color: var(--cyan); text-shadow: var(--glow), 0 0 18px rgba(79,216,236,.35);
+  letter-spacing: 2px; line-height: 1;
+}
+.logo .tri { font-family: var(--mono); font-size: 26px; vertical-align: 3px; }
+.role { font-family: var(--pix); font-size: 13px; color: var(--muted); margin-top: 8px; letter-spacing: 1px; }
+.hostinfo { font-size: 13px; line-height: 1.6; text-align: right; }
+.hostinfo .k { display: inline-block; width: 44px; text-align: left; font-family: var(--pix); font-weight: 700; color: var(--muted); }
+.hostinfo span:not(.k) { color: var(--cyan); font-weight: 600; }
+.sep { width: 1px; align-self: stretch; background: var(--frame-2); }
+.loadinfo { text-align: center; }
+.loadinfo .big { font-size: 20px; font-weight: 600; color: var(--text); }
+.weather { text-align: center; }
+.weather .temp { font-family: var(--mono); font-weight: 700; font-size: 34px; color: var(--amber); text-shadow: 0 0 8px rgba(242,179,61,.5); line-height: 1; }
+.weather .k { margin-top: 6px; }
+.clock { text-align: right; }
+.clock .time { font-family: var(--pix); font-weight: 700; font-size: 46px; color: var(--cyan); text-shadow: var(--glow), 0 0 22px rgba(79,216,236,.35); line-height: 1; letter-spacing: 2px; }
+.clock .k { margin-top: 6px; color: var(--text); opacity: .75; }
+
+/* ── Service cards ───────────────────────────────── */
+.cards { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 10px; }
+.card {
+  border: 1px solid var(--frame-2);
+  background: var(--card);
+  padding: 10px 12px 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  min-width: 0; min-height: 0; overflow: hidden;
+}
+.card.down { border-color: rgba(255, 90, 79, .45); }
+.card .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; white-space: nowrap; }
+.card .name { font-family: var(--pix); font-weight: 700; font-size: 16px; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+.card .up { font-size: 12px; color: var(--cyan); font-weight: 600; }
+.card.down .up { color: var(--red); }
+.spark { width: 100%; height: 26px; display: block; }
+#services .spark { flex: 1; height: auto; min-height: 0; }
+.spark polyline { fill: none; stroke: var(--cyan); stroke-width: 1.5; filter: drop-shadow(0 0 3px rgba(79,216,236,.7)); }
+.spark .area { fill: rgba(79, 216, 236, .08); stroke: none; filter: none; }
+.card.down .spark polyline { stroke: var(--red); filter: none; opacity: .6; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-size: 13px; }
+.metrics .k { font-size: 12px; text-transform: lowercase; margin-right: 6px; }
+.metrics .v { color: var(--cyan); font-weight: 600; }
+.metrics .net { color: var(--text); opacity: .85; font-size: 12px; }
+.card .foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); border-top: 1px dashed var(--dim); padding-top: 5px; white-space: nowrap; }
+.card .foot span:last-child { overflow: hidden; text-overflow: ellipsis; margin-left: 10px; }
+
+
+.cards.small .card { gap: 4px; padding: 8px 12px 6px; }
+.cards.small .spark { height: 18px; }
+
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: none; display: inline-block; }
+.dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.dot.bad { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.dot.warn { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+/* ── Bottom row: system / dns / log ─────────────────────────── */
+.bottom { display: grid; grid-template-columns: 1.25fr .85fr 1.1fr; gap: 12px; min-height: 0; }
+.bottom .box { display: flex; flex-direction: column; }
+
+.sys { flex: 1; display: grid; grid-template-columns: 52px 1fr 100px; gap: 0 12px; align-content: space-evenly; align-items: center; font-size: 14px; }
+.sys .lbl { font-family: var(--pix); font-weight: 700; color: var(--muted); }
+.sys .val { text-align: right; color: var(--cyan); font-weight: 600; }
+.meter { height: 16px; border: 1px solid var(--frame-2); background: #050a10; padding: 1px; }
+.meter i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--cyan) 0 6px, var(--cyan-2) 6px 7px); box-shadow: var(--glow); transition: width .8s ease; }
+.meter i.warn { background: var(--amber); box-shadow: none; }
+.meter i.crit { background: var(--red); box-shadow: none; }
+.sys-foot { margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; border-top: 1px dashed var(--dim); }
+.sys-foot span { color: var(--text); }
+.sys-foot b { color: var(--cyan); font-weight: 600; }
+
+.dns { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 1fr auto; gap: 6px 14px; min-height: 0; }
+.dns .stat .v { font-family: var(--mono); font-weight: 800; font-size: 24px; color: var(--text); }
+.dns .stat .v.c { color: var(--cyan); text-shadow: var(--glow); }
+.dns .stat .v.r { color: var(--red); }
+.dns .spark { grid-column: 1 / 3; height: 100%; min-height: 40px; margin-top: 4px; }
+.dns .checks { grid-column: 1 / 3; display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+.dns .checks span { display: inline-flex; align-items: center; gap: 6px; }
+
+.log { list-style: none; font-size: 13px; line-height: 1.75; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; flex: 1; }
+.log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log .t { color: var(--muted); margin-right: 8px; }
+.log .lv { font-weight: 800; margin-right: 6px; }
+.log .lv.info { color: var(--cyan); }
+.log .lv.ok { color: var(--green); }
+.log .lv.warn { color: var(--amber); }
+.log .lv.err { color: var(--red); }
+.log li:last-child::after { content: "▋"; color: var(--cyan); margin-left: 4px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+#stale { color: var(--amber); }
+
+/* ── Adaptive density (app.js picks it from the number of cards) ── */
+.cards.compact .card { gap: 4px; padding: 8px 10px 6px; }
+.cards.compact .metrics .net,
+.cards.compact .foot span:last-child { display: none; }
+.cards.compact .card .name { font-size: 14px; }
+.cards.mini .card { padding: 7px 10px; gap: 0; }
+.cards.mini .metrics, .cards.mini .foot { display: none; }
+.cards.mini .card { gap: 4px; }
+.cards.mini .card .name { font-size: 13px; }
+
+/* Network: compact chips when there are many devices (max 2 rows) */
+#devices.chips { grid-auto-rows: auto; max-height: 92px; }
+#devices.chips .card { flex-direction: row; align-items: center; padding: 7px 10px; }
+#devices.chips .spark, #devices.chips .foot { display: none; }
+#devices.chips .row { flex: 1; min-width: 0; }
+#devices.chips .card .name { font-size: 12px; }
+#devices .more .name { color: var(--muted); }
+
+/* Link to each service's web UI */
+.card .foot .links a { color: var(--cyan); text-decoration: none; }
+.card .foot .links a:hover { text-decoration: underline; }
+/* Scheduled task card: countdown dial */
+.card.task { justify-content: space-between; container-type: inline-size; }
+@container (max-width: 430px) { .task-info { display: none; } }
+.task-body { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 22px; }
+.dial-wrap { position: relative; height: 100%; max-height: 220px; aspect-ratio: 1; min-height: 70px; container-type: size; }
+.dial { width: 100%; height: 100%; display: block; }
+.dial .tick { stroke: var(--dim); stroke-width: 1; }
+.dial .tick.big { stroke-width: 2; }
+.dial .tick.on { stroke: var(--cyan); filter: drop-shadow(0 0 2px rgba(79,216,236,.8)); }
+.dial .track { fill: none; stroke: #0b1a24; stroke-width: 6; }
+.dial .arc { fill: none; stroke: var(--cyan); stroke-width: 6; stroke-linecap: round;
+             filter: drop-shadow(0 0 5px rgba(79,216,236,.75)); transition: stroke-dasharray .8s ease; }
+.dial.warn .arc, .dial.warn .tick.on { stroke: var(--amber); filter: drop-shadow(0 0 5px rgba(242,179,61,.7)); }
+.dial.crit .arc, .dial.crit .tick.on { stroke: var(--red); filter: drop-shadow(0 0 5px rgba(255,90,79,.7)); }
+.dial-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.dial-center .big { font-family: var(--pix); font-weight: 700; font-size: clamp(9px, 14cqw, 30px); color: var(--cyan); text-shadow: var(--glow); line-height: 1; white-space: nowrap; }
+.dial-center .big small { font-size: .55em; margin-left: 1px; color: var(--muted); text-shadow: none; }
+.dial-center.warn .big { color: var(--amber); }
+.dial-center.crit .big { color: var(--red); }
+.dial-center .k { margin-top: 6px; font-size: clamp(7px, 6cqw, 10px); letter-spacing: 1.5px; }
+.task-info { display: flex; flex-direction: column; gap: 9px; font-size: 14px; min-width: 130px; }
+.task-info > div { display: flex; justify-content: space-between; gap: 16px; white-space: nowrap; border-bottom: 1px dashed var(--dim); padding-bottom: 4px; }
+.task-info .k { font-size: 11px; }
+.task-info .v { color: var(--cyan); font-weight: 600; text-align: right; }
+.cards.compact .task-info, .cards.mini .task-info { display: none; }
+
+/* CPU/GPU models and disk details under each bar */
+.sys .model { grid-column: 2 / 4; margin-top: -6px; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sys .model.gpu { margin-top: 0; color: var(--text); opacity: .85; font-size: 12.5px; }
+.sys .model b { color: var(--cyan); font-weight: 600; }
+.meter.nodata { opacity: .45; }
+.sys .val.off { color: var(--muted); }
