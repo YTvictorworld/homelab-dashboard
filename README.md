@@ -19,7 +19,7 @@ live and new containers or devices show up on their own.
 | **Services** | One card per Docker container: status, uptime, CPU sparkline, CPU %, memory, network ↓↑, HTTP latency, a link to its web UI and the image tag. `UP n/m` turns amber when something is down |
 | **Network** | One card per device on the LAN with ping latency. Devices are found by a periodic ping sweep plus the ARP table, and named from `names.json` or what they announce over mDNS (otherwise `Unknown Device`) |
 | **System** | CPU (with model), each GPU (usage, model, VRAM or shared memory), memory, disk (free / total), battery, network |
-| **DNS** | AdGuard Home queries, % blocked, latency, clients, 24 h chart, and live "resolves / blocks" checks |
+| **DNS** | AdGuard Home queries, % blocked, latency, clients, 24 h chart, and live "resolves / blocks / IPv6" checks |
 | **Event log** | Containers starting, stopping or disappearing, new devices, devices going offline, DNS degraded or recovered, periodic summaries |
 | **Tasks** | Optional cards for scheduled jobs, drawn as a clock dial counting down to the next run (e.g. an LG webOS Developer Mode renewal timer), with the session time left and colour warnings |
 
@@ -82,6 +82,7 @@ All settings are environment variables.
 | `PUBLIC_HOST` | `<hostname>.local` | Host used to build the service links |
 | `ADGUARD_URL`, `ADGUARD_USER`, `ADGUARD_PASSWORD` | `http://127.0.0.1:80` | AdGuard Home API (stats are skipped without credentials) |
 | `DNS_SERVER` | `HOST_IP` | Server used for the "resolves / blocks" checks |
+| `DNS_IPV6` | off | The host IPv6 address your router hands out as DNS (see below) |
 | `WEATHER_LAT`, `WEATHER_LON`, `WEATHER_PLACE` | off | Weather from [Open-Meteo](https://open-meteo.com) (no API key) |
 | `SYNC_INTERVAL` | `3s` | Containers and host stats |
 | `LATENCY_INTERVAL` | `10s` | HTTP latency and DNS checks |
@@ -115,6 +116,23 @@ Re-read every cycle, so no restart is needed. See [`examples/names.example.json`
 ```
 
 Devices listed here always appear, as `OFFLINE` when they don't answer.
+
+### IPv6 DNS watch — `DNS_IPV6`
+
+If your router advertises the server's IPv6 address as DNS (DHCPv6 / RA), that address is built from the
+prefix your ISP assigns, and many ISPs change it now and then. When it changes, clients silently fall
+back to whatever DNS they still have and stop being filtered.
+
+Set `DNS_IPV6` to the address you entered in the router. The DNS panel then shows an **IPv6** light:
+
+- **green**: the host still has that address and the DNS server answers on it;
+- **red**: the address is gone. The panel title reads `IPV6 CHANGED`, a box shows the host's new stable
+  IPv6 to copy into the router, and the event log records it.
+
+Only stable addresses count; temporary privacy addresses are ignored. After updating the router, update
+`DNS_IPV6` too and recreate the container. Try it with `MOCK_IPV6_CHANGED=1 python3 mock.py`.
+
+![IPv6 changed](docs/screenshots/ipv6-changed.png)
 
 ### Task cards — `data/lgtv.json`
 

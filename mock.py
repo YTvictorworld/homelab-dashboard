@@ -6,6 +6,8 @@ Use it to work on the design without a real server:
     MOCK_SERVICES=10 MOCK_DEVICES=8 python3 mock.py &
     python3 -m http.server 8090 --directory web
 
+MOCK_IPV6_CHANGED=1 shows the alert raised when the host's IPv6 changes.
+
 All names, IPs and values here are made up.
 """
 import json
@@ -40,6 +42,7 @@ DEVICE_POOL = [
 
 n_svc = int(os.environ.get("MOCK_SERVICES", "4"))
 n_dev = int(os.environ.get("MOCK_DEVICES", "6"))
+V6_CHANGED = os.environ.get("MOCK_IPV6_CHANGED") == "1"   # show the "IPv6 changed" alert
 services = [dict(id=f"{SERVICE_POOL[k % len(SERVICE_POOL)][0]}{'' if k < len(SERVICE_POOL) else k}",
                  name=SERVICE_POOL[k % len(SERVICE_POOL)][1] + ("" if k < len(SERVICE_POOL) else f" {k // len(SERVICE_POOL) + 1}"), port=SERVICE_POOL[k % len(SERVICE_POOL)][2],
                  image=SERVICE_POOL[k % len(SERVICE_POOL)][3], base=2 + k * 1.3, mem=40 + k * 23)
@@ -115,7 +118,9 @@ def tick(i):
              "ms": None if d.get("down") else round(hist[d["id"]][-1] * 10), "hist": [v * 10 for v in hist[d["id"]]]}
             for d in devices],
         "dns": {"queries": queries, "blocked": int(queries * 0.17), "avg_ms": 4.2, "clients": 9,
-                "hist": dns_h, "resolve_ok": True, "block_ok": True},
+                "hist": dns_h, "resolve_ok": True, "block_ok": True,
+                "ipv6": {"expected": "2001:db8:1:2::10", "current": "2001:db8:9:8::10" if V6_CHANGED else "2001:db8:1:2::10",
+                         "present": not V6_CHANGED, "answers": not V6_CHANGED, "ok": not V6_CHANGED}},
         "events": [{"t": t, "level": l, "msg": m} for t, l, m in events[-12:]],
     }
 

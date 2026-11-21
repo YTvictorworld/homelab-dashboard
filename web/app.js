@@ -231,8 +231,15 @@ function renderDns(n) {
   if (!n) return;
   const num = (v, f = (x) => x) => (v == null ? "—" : f(v));
   const blockedPct = n.queries ? pct(n.blocked, n.queries) : null;
-  $("dns-state").innerHTML = n.resolve_ok && n.block_ok
-    ? `<span style="color:var(--green)">NOMINAL</span>` : `<span style="color:var(--red)">DEGRADED</span>`;
+  const v6 = n.ipv6;   // only present when DNS_IPV6 is set
+  $("dns-state").innerHTML = !(n.resolve_ok && n.block_ok)
+    ? `<span style="color:var(--red)">DEGRADED</span>`
+    : v6 && !v6.ok ? `<span style="color:var(--red)">${v6.present ? "IPV6 DOWN" : "IPV6 CHANGED"}</span>`
+    : `<span style="color:var(--green)">NOMINAL</span>`;
+  const v6alert = !v6 || v6.ok ? "" : `<div class="v6alert">${
+    v6.present ? "IPv6 DNS not answering"
+    : v6.current ? `IPv6 changed → set router DNS to <b>${v6.current}</b>`
+    : "no global IPv6 on this host"}</div>`;
   $("dns").innerHTML = `
     <div class="stat"><div class="k">queries 24h</div><div class="v c">${num(n.queries, (v) => v.toLocaleString("en-US"))}</div></div>
     <div class="stat"><div class="k">blocked</div><div class="v r">${num(blockedPct, (v) => v.toFixed(1) + "%")}</div></div>
@@ -242,7 +249,8 @@ function renderDns(n) {
     <div class="checks">
       <span><i class="dot ${n.resolve_ok ? "ok" : "bad"}"></i>resolves</span>
       <span><i class="dot ${n.block_ok ? "ok" : "bad"}"></i>blocks</span>
-    </div>`;
+      ${v6 ? `<span title="${v6.expected}"><i class="dot ${v6.ok ? "ok" : "bad"}"></i>IPv6</span>` : ""}
+    </div>${v6alert}`;
 }
 
 function renderLog(events) {

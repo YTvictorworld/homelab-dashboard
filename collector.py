@@ -79,6 +79,7 @@ CONFIG = {
     "adguard_user": E("ADGUARD_USER", ""),
     "adguard_pass": E("ADGUARD_PASSWORD", ""),
     "dns_server": E("DNS_SERVER", ""),                # default: HOST_IP
+    "dns_ipv6": E("DNS_IPV6", ""),                    # IPv6 DNS set in the router (check is off when empty)
     "lat": E("WEATHER_LAT", ""),                      # weather is off unless both are set
     "lon": E("WEATHER_LON", ""),
     "place": E("WEATHER_PLACE", ""),                  # short label, e.g. "NYC"
@@ -135,6 +136,7 @@ HOST_CMDS = {
     "procs": "ls -d /proc/[0-9]* | wc -l",
     "top": "ps -eo comm,pcpu --sort=-pcpu --no-headers | head -1",
     "route": "ip route show default | head -1",
+    "ip6": "ip -6 -o addr show scope global 2>/dev/null",
     "cpumodel": "grep -m1 'model name' /proc/cpuinfo",
     "gpu": "lspci 2>/dev/null | grep -Ei 'vga|3d controller|display'",
     "gpudrv": "for c in /sys/class/drm/card[0-9]; do echo $(basename $c) $(basename $(readlink -f $c/device)) "
@@ -386,6 +388,10 @@ def collect_host():
         gpus.append(g)
     gpus.sort(key=lambda x: x["pct"] is None)   # GPUs with measurable usage first
     h["gpus"] = gpus
+    # stable global IPv6 addresses (privacy "temporary" and "deprecated" ones change on their own)
+    h["ipv6"] = [m.group(1) for line in (d.get("cmd:ip6") or "").splitlines()
+                 if "temporary" not in line and "deprecated" not in line
+                 for m in [re.search(r"inet6 ([0-9a-f:]+)/", line)] if m]
     top = (d.get("cmd:top") or "").split()
     if len(top) >= 2:
         h["top"] = (top[0], float(top[-1]))
@@ -500,7 +506,7 @@ def dns_query(server, name, timeout=2):
     qid = random.randint(0, 65535)
     q = struct.pack(">HHHHHH", qid, 0x0100, 1, 0, 0, 0)
     q += b"".join(bytes([len(p)]) + p.encode() for p in name.split(".")) + b"\0" + struct.pack(">HH", 1, 1)
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s = socket.socket(socket.AF_INET6 if ":" in server else socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(timeout)
     try:
         s.sendto(q, (server, 53))
@@ -534,6 +540,20 @@ def collect_dns():
         out["block_ok"] = dns_query(server, "ad.doubleclick.net") in ("0.0.0.0", None)
     except Exception:
         pass
+    want = CONFIG["dns_ipv6"]
+    with LOCK:
+        have = STATE["host"].get("ipv6")      # None until the host was read once
+    if want and have is not None:
+        v6 = {"expected": want, "present": want in have, "answers": False,
+              "current": next((a for a in have if not a.startswith("fd")), None)}
+        if v6["present"]:
+            try:
+                dns_query(want, "google.com")
+                v6["answers"] = True
+            except Exception:
+                pass
+        v6["ok"] = v6["present"] and v6["answers"]
+        out["ipv6"] = v6
     if CONFIG["adguard_user"]:
         try:
             req = urllib.request.Request(CONFIG["adguard_url"].rstrip("/") + "/control/stats")
@@ -552,6 +572,16 @@ def collect_dns():
             event("err", "DNS degraded")
         elif prev and not (prev["resolve_ok"] and prev["block_ok"]) and out["resolve_ok"] and out["block_ok"]:
             event("ok", "DNS recovered")
+        was, now = (prev or {}).get("ipv6"), out.get("ipv6")
+        if now and (was is None or was["ok"]) and not now["ok"]:
+            if not now["present"] and now["current"]:
+                event("err", f'IPv6 changed: set router DHCPv6 DNS to {now["current"]}')
+            elif not now["present"]:
+                event("err", "IPv6 DNS address is gone (no global IPv6)")
+            else:
+                event("err", "IPv6 DNS not answering")
+        elif now and was and not was["ok"] and now["ok"]:
+            event("ok", "IPv6 DNS ok")
         STATE["dns"] = out
 
 
